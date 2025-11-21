@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/.build/arm64-apple-macosx/debug/CoreTests.build/master.swiftdeps"
+  },
+  "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/Tests/CoreTests/DependencyInjectionTests.swift": {
+    "dependencies": "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/.build/arm64-apple-macosx/debug/CoreTests.build/DependencyInjectionTests.d",
+    "object": "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/.build/arm64-apple-macosx/debug/CoreTests.build/DependencyInjectionTests.swift.o",
+    "swiftmodule": "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/.build/arm64-apple-macosx/debug/CoreTests.build/DependencyInjectionTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/.build/arm64-apple-macosx/debug/CoreTests.build/DependencyInjectionTests.swiftdeps",
+    "diagnostics": "/Users/felipe.bassi/Documents/Workspace/iOS/Pessoais/Very good ventures/CoffeeSaver/Packages/Core/.build/arm64-apple-macosx/debug/CoreTests.build/DependencyInjectionTests.dia"
+  }
+}

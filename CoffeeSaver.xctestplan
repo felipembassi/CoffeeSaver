@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "7E8F9A1B-2C3D-4E5F-6A7B-8C9D0E1F2A3B",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:CoffeeSaver.xcodeproj",
+      "identifier" : "MAIN_APP_TARGET_ID",
+      "name" : "CoffeeSaver"
+    }
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : [
+
+      ],
+      "target" : {
+        "containerPath" : "container:Packages\/Core",
+        "identifier" : "CoreTests",
+        "name" : "CoreTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:CoffeeSaver.xcodeproj",
+        "identifier" : "UI_TEST_TARGET_ID",
+        "name" : "CoffeeSaverUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

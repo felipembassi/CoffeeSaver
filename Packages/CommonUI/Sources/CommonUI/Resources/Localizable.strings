@@ -1,0 +1,35 @@
+// MARK: - Navigation Titles
+
+"navigation.discover" = "Discover";
+"navigation.saved" = "Saved Coffees";
+
+// MARK: - Tab Bar
+
+"tab.discover" = "Discover";
+"tab.saved" = "Saved";
+
+// MARK: - Discovery
+
+"discovery.emoji" = "☕️";
+"discovery.subtitle" = "Swipe to find your favorite";
+"discovery.loading" = "Finding a perfect coffee...";
+
+// MARK: - Saved Coffees
+
+"saved.empty.title" = "No Saved Coffees";
+"saved.empty.message" = "Swipe right on coffee images you love to save them here";
+
+// MARK: - Alerts
+
+"alert.delete.title" = "Delete Coffee?";
+"alert.delete.message" = "This coffee image will be permanently deleted.";
+"alert.delete.cancel" = "Cancel";
+"alert.delete.confirm" = "Delete";
+
+// MARK: - Actions
+
+"action.tryAgain" = "Try Again";
+
+// MARK: - Errors
+
+"error.generic" = "Something went wrong";

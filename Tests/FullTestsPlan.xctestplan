@@ -1,0 +1,32 @@
+{
+  "configurations" : [
+    {
+      "id" : "7A28D1CB-E96E-4ACB-9CE9-774CB7B05FE4",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:CoffeeSaver.xcodeproj",
+        "identifier" : "941C294A2ED0075400A34466",
+        "name" : "CoffeeSaverTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:CoffeeSaver.xcodeproj",
+        "identifier" : "94A603D22ECFF248002690E7",
+        "name" : "CoffeeSaverUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
