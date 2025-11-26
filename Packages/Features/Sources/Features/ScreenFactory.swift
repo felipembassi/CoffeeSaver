@@ -59,33 +59,54 @@ public struct ScreenFactory {
 
 // MARK: - Screen Builders
 
-/// Helper view that builds the Discovery screen
+/// Helper view that builds the Discovery screen with proper ViewModel lifecycle
 private struct DiscoveryScreenBuilder: View {
     let dependencies: AppDependencies
     let modelContext: ModelContext
     let router: Router
 
+    @State private var viewModel: CoffeeDiscoveryViewModel?
+
     var body: some View {
-        let viewModel = CoffeeDiscoveryViewModel(
-            apiService: dependencies.apiService,
-            storageService: dependencies.storageService,
-            modelContext: modelContext
-        )
-        CoffeeDiscoveryView(viewModel: viewModel, router: router)
+        Group {
+            if let viewModel {
+                CoffeeDiscoveryView(viewModel: viewModel, router: router)
+            } else {
+                ProgressView()
+                    .task {
+                        let coffeeAPIClient = CoffeeAPIClient(networkService: dependencies.networkService)
+                        viewModel = CoffeeDiscoveryViewModel(
+                            coffeeAPIClient: coffeeAPIClient,
+                            storageService: dependencies.storageService,
+                            modelContext: modelContext
+                        )
+                    }
+            }
+        }
     }
 }
 
-/// Helper view that builds the Saved screen
+/// Helper view that builds the Saved screen with proper ViewModel lifecycle
 private struct SavedScreenBuilder: View {
     let dependencies: AppDependencies
     let modelContext: ModelContext
     let router: Router
 
+    @State private var viewModel: SavedCoffeesViewModel?
+
     var body: some View {
-        let viewModel = SavedCoffeesViewModel(
-            storageService: dependencies.storageService,
-            modelContext: modelContext
-        )
-        SavedCoffeesView(viewModel: viewModel, router: router)
+        Group {
+            if let viewModel {
+                SavedCoffeesView(viewModel: viewModel, router: router)
+            } else {
+                ProgressView()
+                    .task {
+                        viewModel = SavedCoffeesViewModel(
+                            storageService: dependencies.storageService,
+                            modelContext: modelContext
+                        )
+                    }
+            }
+        }
     }
 }

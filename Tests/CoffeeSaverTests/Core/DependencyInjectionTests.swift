@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import Core
 
 /// Unit tests for the Has<Property> dependency injection pattern.
@@ -19,49 +20,49 @@ struct DependencyInjectionTests {
         let container = ServiceContainer.production()
 
         // Then it should provide real service implementations
-        #expect(container.apiService is CoffeeAPIService)
+        #expect(container.networkService is NetworkService)
         #expect(container.storageService is ImageStorageService)
     }
 
-    @Test("Testing container creates mock services")
-    func testingContainerCreatesMockServices() {
+    @Test("Testing container creates appropriate services")
+    func testingContainerCreatesAppropriateServices() {
         // When creating a testing container
         let container = ServiceContainer.testing()
 
-        // Then it should provide mock service implementations
-        #expect(container.apiService is MockCoffeeAPIService)
-        #expect(container.storageService is MockImageStorageService)
+        // Then it should provide mock network and real storage (with temp directory)
+        #expect(container.networkService is MockNetworkService)
+        #expect(container.storageService is ImageStorageService)
     }
 
     @Test("Custom container initialization works")
     func customContainerInitialization() {
         // Given custom service instances
-        let apiService = MockCoffeeAPIService()
-        let storageService = MockImageStorageService()
+        let networkService = MockNetworkService()
+        let storageService = ImageStorageService.forTesting()
 
         // When creating a container with custom services
         let container = ServiceContainer(
-            apiService: apiService,
+            networkService: networkService,
             storageService: storageService
         )
 
         // Then it should use the provided services
-        #expect(container.apiService is MockCoffeeAPIService)
-        #expect(container.storageService is MockImageStorageService)
+        #expect(container.networkService is MockNetworkService)
+        #expect(container.storageService is ImageStorageService)
     }
 
     // MARK: - Has<Property> Protocol Conformance
 
-    @Test("ServiceContainer conforms to HasAPIService")
-    func serviceContainerConformsToHasAPIService() {
+    @Test("ServiceContainer conforms to HasNetworkService")
+    func serviceContainerConformsToHasNetworkService() {
         // Given a service container
         let container = ServiceContainer.testing()
 
-        // When treating it as HasAPIService
-        let hasAPI: any HasAPIService = container
+        // When treating it as HasNetworkService
+        let hasNetwork: any HasNetworkService = container
 
-        // Then it should provide API service access
-        #expect(hasAPI.apiService is MockCoffeeAPIService)
+        // Then it should provide network service access
+        #expect(hasNetwork.networkService is MockNetworkService)
     }
 
     @Test("ServiceContainer conforms to HasStorageService")
@@ -73,7 +74,7 @@ struct DependencyInjectionTests {
         let hasStorage: any HasStorageService = container
 
         // Then it should provide storage service access
-        #expect(hasStorage.storageService is MockImageStorageService)
+        #expect(hasStorage.storageService is ImageStorageService)
     }
 
     @Test("ServiceContainer conforms to AppDependencies composition")
@@ -85,8 +86,8 @@ struct DependencyInjectionTests {
         let dependencies: any AppDependencies = container
 
         // Then it should provide access to all services
-        #expect(dependencies.apiService is MockCoffeeAPIService)
-        #expect(dependencies.storageService is MockImageStorageService)
+        #expect(dependencies.networkService is MockNetworkService)
+        #expect(dependencies.storageService is ImageStorageService)
     }
 
     // MARK: - Sendable Conformance
@@ -103,7 +104,7 @@ struct DependencyInjectionTests {
         let _: any Sendable = container
 
         // Then it compiles successfully (this test passing means Sendable works)
-        #expect(container.apiService is MockCoffeeAPIService)
+        #expect(container.networkService is MockNetworkService)
     }
 
     @Test("AppDependencies can be used across concurrency boundaries")
@@ -120,21 +121,21 @@ struct DependencyInjectionTests {
 
     // Helper function that requires Sendable parameter
     private func useDependencies(_ deps: any AppDependencies) async {
-        #expect(deps.apiService is MockCoffeeAPIService)
+        #expect(deps.networkService is MockNetworkService)
     }
 
     // MARK: - Service Access
 
-    @Test("API service is accessible through container")
-    func apiServiceIsAccessible() {
+    @Test("Network service is accessible through container")
+    func networkServiceIsAccessible() {
         // Given a testing container
         let container = ServiceContainer.testing()
 
-        // When accessing the API service
-        let apiService = container.apiService
+        // When accessing the network service
+        let networkService = container.networkService
 
         // Then it should be the mock implementation
-        #expect(apiService is MockCoffeeAPIService)
+        #expect(networkService is MockNetworkService)
     }
 
     @Test("Storage service is accessible through container")
@@ -145,8 +146,8 @@ struct DependencyInjectionTests {
         // When accessing the storage service
         let storageService = container.storageService
 
-        // Then it should be the mock implementation
-        #expect(storageService is MockImageStorageService)
+        // Then it should be the real implementation (with temp directory)
+        #expect(storageService is ImageStorageService)
     }
 
     // MARK: - Test Helper: Mock AppDependencies
@@ -155,8 +156,8 @@ struct DependencyInjectionTests {
     func customMockDependenciesCanBeCreated() {
         // Given custom mock implementations
         struct MockDependencies: AppDependencies {
-            let apiService: CoffeeAPIServiceProtocol = MockCoffeeAPIService()
-            let storageService: ImageStorageServiceProtocol = MockImageStorageService()
+            let networkService: NetworkServiceProtocol = MockNetworkService()
+            let storageService: ImageStorageServiceProtocol = ImageStorageService.forTesting()
         }
 
         // When creating mock dependencies
@@ -164,7 +165,27 @@ struct DependencyInjectionTests {
 
         // Then they should conform to AppDependencies
         let dependencies: any AppDependencies = mocks
-        #expect(dependencies.apiService is MockCoffeeAPIService)
-        #expect(dependencies.storageService is MockImageStorageService)
+        #expect(dependencies.networkService is MockNetworkService)
+        #expect(dependencies.storageService is ImageStorageService)
+    }
+
+    // MARK: - Environment Configuration Tests
+
+    @Test("Production configuration has correct base URL")
+    func productionConfigHasCorrectBaseURL() {
+        // When getting production configuration
+        let config = CoffeeAPIConfiguration.configuration(for: .production)
+
+        // Then it should have the correct base URL
+        #expect(config.baseURL.absoluteString == "https://coffee.alexflipnote.dev")
+    }
+
+    @Test("Testing configuration has correct base URL")
+    func testingConfigHasCorrectBaseURL() {
+        // When getting testing configuration
+        let config = CoffeeAPIConfiguration.configuration(for: .testing)
+
+        // Then it should have the mock base URL
+        #expect(config.baseURL.absoluteString == "https://mock.coffee.test")
     }
 }

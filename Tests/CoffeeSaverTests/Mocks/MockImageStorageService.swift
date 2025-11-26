@@ -20,7 +20,7 @@ actor MockImageStorageService: ImageStorageServiceProtocol {
         saveCallCount += 1
 
         if shouldFailSave {
-            throw StorageError.saveFailed
+            throw StorageError.saveFailed(underlyingError: NSError(domain: "MockError", code: -1))
         }
 
         let path = "/fake/path/\(id).jpg"
@@ -32,25 +32,17 @@ actor MockImageStorageService: ImageStorageServiceProtocol {
         loadCallCount += 1
 
         if shouldFailLoad {
-            throw StorageError.fileNotFound
+            throw StorageError.fileNotFound(path: path)
         }
 
-        // Create a simple 10x10 red image
-        let size = CGSize(width: 10, height: 10)
-        UIGraphicsBeginImageContext(size)
-        UIColor.red.setFill()
-        UIRectFill(CGRect(origin: .zero, size: size))
-        let image = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-
-        return image
+        return createTestImage(size: CGSize(width: 10, height: 10), color: .red)
     }
 
     func deleteImage(at path: String) async throws {
         deleteCallCount += 1
 
         if shouldFailDelete {
-            throw StorageError.deleteFailed
+            throw StorageError.deleteFailed(underlyingError: NSError(domain: "MockError", code: -1))
         }
 
         // Remove from mock storage
@@ -98,5 +90,18 @@ actor MockImageStorageService: ImageStorageServiceProtocol {
 
     func setShouldFailThumbnail(_ value: Bool) {
         shouldFailThumbnail = value
+    }
+
+    // MARK: - Private Helpers
+
+    private func createTestImage(size: CGSize, color: UIColor) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        return renderer.image { context in
+            color.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
     }
 }

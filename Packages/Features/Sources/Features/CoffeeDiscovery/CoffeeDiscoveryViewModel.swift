@@ -3,18 +3,38 @@ import SwiftUI
 import SwiftData
 import Core
 
+// MARK: - Constants
+
+private enum Constants {
+    static let maxImageDimension: CGFloat = 1200
+    static let jpegCompressionQuality: CGFloat = 0.9
+}
+
 @MainActor
 @Observable
 public final class CoffeeDiscoveryViewModel {
-    private let apiService: CoffeeAPIServiceProtocol
+    private let coffeeAPIClient: CoffeeAPIClientProtocol
     private let storageService: ImageStorageServiceProtocol
     private let modelContext: ModelContext
 
-    public enum LoadingState {
+    public enum LoadingState: Equatable {
         case idle
         case loading
         case loaded(UIImage)
-        case error(Error)
+        case error(String)
+
+        public static func == (lhs: LoadingState, rhs: LoadingState) -> Bool {
+            switch (lhs, rhs) {
+            case (.idle, .idle), (.loading, .loading):
+                return true
+            case (.loaded(let lhsImage), .loaded(let rhsImage)):
+                return lhsImage === rhsImage
+            case (.error(let lhsMessage), .error(let rhsMessage)):
+                return lhsMessage == rhsMessage
+            default:
+                return false
+            }
+        }
     }
 
     public private(set) var loadingState: LoadingState = .idle
@@ -22,11 +42,11 @@ public final class CoffeeDiscoveryViewModel {
     public private(set) var isSaving = false
 
     public init(
-        apiService: CoffeeAPIServiceProtocol,
+        coffeeAPIClient: CoffeeAPIClientProtocol,
         storageService: ImageStorageServiceProtocol,
         modelContext: ModelContext
     ) {
-        self.apiService = apiService
+        self.coffeeAPIClient = coffeeAPIClient
         self.storageService = storageService
         self.modelContext = modelContext
     }
@@ -35,23 +55,34 @@ public final class CoffeeDiscoveryViewModel {
         loadingState = .loading
 
         do {
-            let response = try await apiService.fetchRandomCoffee()
+            let response = try await coffeeAPIClient.fetchRandomCoffee()
+
+            // Check for cancellation after network call
+            try Task.checkCancellation()
+
             currentCoffeeURL = response.file
 
-            guard let imageURL = URL(string: response.file) else {
+            guard let imageURL = response.imageURL else {
                 throw NetworkError.invalidURL
             }
 
-            let imageData = try await apiService.downloadImage(from: imageURL)
+            let imageData = try await coffeeAPIClient.downloadImage(from: imageURL)
+
+            // Check for cancellation after image download
+            try Task.checkCancellation()
 
             // Downsample large images to avoid memory issues
-            guard let image = downsampleImage(data: imageData, to: CGSize(width: 1200, height: 1200)) else {
+            let targetSize = CGSize(width: Constants.maxImageDimension, height: Constants.maxImageDimension)
+            guard let image = downsampleImage(data: imageData, to: targetSize) else {
                 throw NetworkError.imageConversionFailed
             }
 
             loadingState = .loaded(image)
+        } catch is CancellationError {
+            // Task was cancelled, don't update state
+            return
         } catch {
-            loadingState = .error(error)
+            loadingState = .error(error.localizedDescription)
         }
     }
 
@@ -79,7 +110,7 @@ public final class CoffeeDiscoveryViewModel {
     public func saveCoffee() async {
         guard case .loaded(let image) = loadingState,
               let coffeeURL = currentCoffeeURL,
-              let imageData = image.jpegData(compressionQuality: 0.9) else {
+              let imageData = image.jpegData(compressionQuality: Constants.jpegCompressionQuality) else {
             return
         }
 
@@ -92,8 +123,14 @@ public final class CoffeeDiscoveryViewModel {
             // Save full image
             let imagePath = try await storageService.saveImage(imageData, withID: coffeeID)
 
+            // Check for cancellation after file operation
+            try Task.checkCancellation()
+
             // Generate thumbnail
             let thumbnailPath = try await storageService.generateThumbnail(from: imageData, withID: coffeeID)
+
+            // Check for cancellation after thumbnail generation
+            try Task.checkCancellation()
 
             // Save to SwiftData
             let coffeeImage = CoffeeImage(
@@ -108,8 +145,11 @@ public final class CoffeeDiscoveryViewModel {
 
             // Load next coffee after successful save
             await loadRandomCoffee()
+        } catch is CancellationError {
+            // Task was cancelled, don't update state
+            return
         } catch {
-            loadingState = .error(error)
+            loadingState = .error(error.localizedDescription)
         }
     }
 
@@ -125,8 +165,8 @@ public final class CoffeeDiscoveryViewModel {
     }
 
     public var errorMessage: String? {
-        if case .error(let error) = loadingState {
-            return error.localizedDescription
+        if case .error(let message) = loadingState {
+            return message
         }
         return nil
     }

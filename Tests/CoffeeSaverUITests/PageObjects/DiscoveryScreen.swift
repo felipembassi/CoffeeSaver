@@ -6,7 +6,14 @@ struct DiscoveryScreen {
     // MARK: - Elements
 
     var coffeeCard: XCUIElement {
-        app.images["coffee-card"]
+        // SwipeableCardView is a custom container view, not just an image
+        // First try to find as otherElements, then fallback to any element with the identifier
+        let card = app.otherElements["coffee-card"]
+        if card.exists {
+            return card
+        }
+        // Fallback: search across all element types
+        return app.descendants(matching: .any).matching(identifier: "coffee-card").firstMatch
     }
 
     var likeButton: XCUIElement {
@@ -30,7 +37,9 @@ struct DiscoveryScreen {
     @discardableResult
     func waitForCardToLoad(timeout: TimeInterval = 30) -> Bool {
         // Wait for either card to load or error to appear
-        let cardExists = coffeeCard.waitForExistence(timeout: timeout)
+        // Use descendants query to find element with coffee-card identifier
+        let cardQuery = app.descendants(matching: .any).matching(identifier: "coffee-card").firstMatch
+        let cardExists = cardQuery.waitForExistence(timeout: timeout)
         if !cardExists && hasError {
             print("⚠️ Coffee card failed to load - error view is showing")
         }
@@ -81,13 +90,20 @@ struct DiscoveryScreen {
     }
 
     func waitForNewImage(previousURL: String?, timeout: TimeInterval = 5) -> Bool {
-        let predicate = NSPredicate { _, _ in
-            guard let currentURL = self.currentImageURL else { return false }
-            return currentURL != previousURL
+        // Use polling with proper QoS to avoid priority inversion
+        let startTime = Date()
+        let pollingInterval: TimeInterval = 0.1
+        
+        while Date().timeIntervalSince(startTime) < timeout {
+            // Query on the main run loop to maintain proper QoS
+            if let currentURL = currentImageURL, currentURL != previousURL {
+                return true
+            }
+            
+            // Use RunLoop.current.run to maintain User-interactive QoS
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: pollingInterval))
         }
-
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
-        return result == .completed
+        
+        return false
     }
 }

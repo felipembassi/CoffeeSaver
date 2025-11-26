@@ -72,9 +72,9 @@ public struct CoffeeDiscoveryView: View {
                 .accessibilityIdentifier("coffee-card")
                 .accessibilityLabel("coffee-image-\(viewModel.currentCoffeeURL ?? "unknown")")
 
-        case .error(let error):
+        case .error(let message):
             ErrorView(
-                message: error.localizedDescription,
+                message: message,
                 retryAction: {
                     Task {
                         await viewModel.loadRandomCoffee()

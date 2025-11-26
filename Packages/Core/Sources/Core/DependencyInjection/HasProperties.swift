@@ -2,23 +2,23 @@ import Foundation
 
 // MARK: - Has<Property> Protocols
 
-/// Protocol for types that provide access to the Coffee API service.
+/// Protocol for types that provide access to a generic network service.
 ///
-/// Use this protocol to declare dependencies on the API service without
+/// Use this protocol to declare dependencies on the network service without
 /// coupling to the full container implementation.
 ///
 /// Example:
 /// ```swift
 /// class MyViewModel {
-///     typealias Dependencies = HasAPIService
+///     typealias Dependencies = HasNetworkService
 ///
 ///     init(dependencies: Dependencies) {
-///         self.apiService = dependencies.apiService
+///         self.networkService = dependencies.networkService
 ///     }
 /// }
 /// ```
-public protocol HasAPIService {
-    var apiService: CoffeeAPIServiceProtocol { get }
+public protocol HasNetworkService {
+    var networkService: NetworkServiceProtocol { get }
 }
 
 /// Protocol for types that provide access to the Image Storage service.
@@ -54,4 +54,4 @@ public protocol HasStorageService {
 ///     }
 /// }
 /// ```
-public typealias AppDependencies = HasAPIService & HasStorageService & Sendable
+public typealias AppDependencies = HasNetworkService & HasStorageService & Sendable
