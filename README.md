@@ -56,36 +56,50 @@ xcodebuild test -scheme CoffeeSaver -destination 'platform=iOS Simulator,name=iP
 CoffeeSaver/
 ├── CoffeeSaverApp/          # Main app target
 │   ├── App/                 # App entry point and dependency injection
+│   ├── Coordinators/        # App-level coordinator
 │   └── Resources/           # Assets and configuration
 ├── Packages/                # Swift Package modules
 │   ├── Core/               # Core business logic and services
 │   │   ├── Models/         # Data models (CoffeeImage)
-│   │   ├── Services/       # API and storage services
-│   │   └── Mocks/          # Mock implementations for testing
+│   │   ├── Networking/     # Network services and reachability
+│   │   ├── Persistence/    # Storage services
+│   │   └── DependencyInjection/ # Has<Property> protocols
 │   ├── Features/           # Feature modules
-│   │   ├── Discovery/      # Coffee discovery feature
-│   │   └── SavedCoffees/   # Saved coffees feature
+│   │   ├── CoffeeDiscovery/    # Discovery feature with Coordinator
+│   │   └── SavedCoffees/       # Saved coffees feature with Coordinator
 │   └── CommonUI/           # Shared UI components and design system
+│       ├── Components/     # Reusable views (SwipeableCardView, etc.)
+│       ├── DesignSystem/   # Colors, Typography, Spacing, Dimensions
+│       └── Routing/        # Router and Coordinator protocols
 └── Tests/
-    ├── CoffeeSaverTests/   # Unit tests
+    ├── CoffeeSaverTests/   # Unit tests (38 tests)
     └── CoffeeSaverUITests/ # UI tests
 ```
 
 ## Architecture
 
-- **MVVM**: Model-View-ViewModel pattern
+- **MVVM + Coordinator**: Model-View-ViewModel with Feature Coordinators
 - **SwiftData**: For persistent storage
 - **Async/Await**: Modern Swift concurrency
-- **Actor**: Thread-safe services
+- **Actor**: Thread-safe services (NetworkReachability)
 - **Has<Property> DI**: Compositional dependency injection pattern
 - **Modular**: Swift Package-based architecture
+
+### Feature Coordinators
+
+Each feature has a Coordinator that:
+- Owns the ViewModel lifecycle via `@State`
+- Receives only the dependencies the feature needs
+- Handles feature-level navigation
+- Creates and configures the View
 
 ### Dependency Injection
 
 The project uses the **Has<Property> pattern** for clean, compositional dependency injection:
 
-- `HasAPIService` - Protocol for API service access
+- `HasNetworkService` - Protocol for network service access
 - `HasStorageService` - Protocol for storage service access
+- `HasReachability` - Protocol for network reachability monitoring
 - `AppDependencies` - Composition of all Has protocols
 - `ServiceContainer` - Concrete implementation with environment-aware service selection
 
@@ -93,13 +107,13 @@ Benefits: Simple, type-safe, testable, and synchronous dependency access.
 
 ## Technologies
 
-- **SwiftUI**: Declarative UI framework
+- **SwiftUI**: Declarative UI framework with `.sensoryFeedback` for haptics
 - **SwiftData**: Apple's modern persistence framework
-- **Async/Await**: Swift concurrency for asynchronous operations
-- **Actor**: Thread-safe concurrent programming
-- **URLSession**: Networking
-- **XCTest**: Unit and UI testing
-- **Swift Testing**: Modern testing framework
+- **Swift Concurrency**: async/await, Actors, Tasks with cancellation support
+- **Network Framework**: NWPathMonitor for reachability monitoring
+- **URLSession**: Networking with protocol-based abstraction
+- **Swift Testing**: Modern testing framework with 38 unit tests
+- **@Observable**: Modern observation for ViewModels (iOS 17+)
 
 ## API
 
@@ -110,11 +124,3 @@ The app uses the [Coffee API](https://coffee.alexflipnote.dev/) to fetch random 
 - **Unit Tests**: Test view models, services, and business logic with mocks
 - **UI Tests**: End-to-end testing of critical user paths
 - **Mocks**: All network calls are mocked in tests for reliability and speed
-
-## License
-
-[Add your license here]
-
-## Author
-
-[Add your name/info here]
