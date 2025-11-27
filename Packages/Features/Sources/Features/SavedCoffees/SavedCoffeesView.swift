@@ -57,7 +57,7 @@ public struct SavedCoffeesView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("saved-empty-state")
+        .accessibilityIdentifier(AccessibilityIdentifiers.Saved.emptyState)
     }
 
     private var coffeeGrid: some View {
@@ -79,7 +79,7 @@ public struct SavedCoffeesView: View {
             }
             .padding(Spacing.medium)
         }
-        .accessibilityIdentifier("saved-grid")
+        .accessibilityIdentifier(AccessibilityIdentifiers.Saved.grid)
     }
 }
 
@@ -127,7 +127,7 @@ struct CoffeeThumbnailView: View {
                         .background(Circle().fill(Colors.shadow(opacity: 0.5)))
                         .padding(Spacing.xSmall)
                 }
-                .accessibilityIdentifier("delete-button-\(coffee.id)")
+                .accessibilityIdentifier(AccessibilityIdentifiers.Saved.deleteButton(for: coffee.id))
             }
         }
         .aspectRatio(1, contentMode: .fit)

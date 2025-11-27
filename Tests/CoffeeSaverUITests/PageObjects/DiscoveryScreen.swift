@@ -1,5 +1,14 @@
 import XCTest
 
+/// Accessibility identifiers matching AccessibilityIdentifiers.Discovery in CommonUI
+private enum DiscoveryIDs {
+    static let coffeeCard = "coffee-card"
+    static let likeButton = "like-button"
+    static let skipButton = "skip-button"
+    static let loading = "discovery-loading"
+    static let error = "discovery-error"
+}
+
 struct DiscoveryScreen {
     let app: XCUIApplication
 
@@ -8,28 +17,28 @@ struct DiscoveryScreen {
     var coffeeCard: XCUIElement {
         // SwipeableCardView is a custom container view, not just an image
         // First try to find as otherElements, then fallback to any element with the identifier
-        let card = app.otherElements["coffee-card"]
+        let card = app.otherElements[DiscoveryIDs.coffeeCard]
         if card.exists {
             return card
         }
         // Fallback: search across all element types
-        return app.descendants(matching: .any).matching(identifier: "coffee-card").firstMatch
+        return app.descendants(matching: .any).matching(identifier: DiscoveryIDs.coffeeCard).firstMatch
     }
 
     var likeButton: XCUIElement {
-        app.buttons["like-button"]
+        app.buttons[DiscoveryIDs.likeButton]
     }
 
     var skipButton: XCUIElement {
-        app.buttons["skip-button"]
+        app.buttons[DiscoveryIDs.skipButton]
     }
 
     var loadingIndicator: XCUIElement {
-        app.otherElements["discovery-loading"]
+        app.otherElements[DiscoveryIDs.loading]
     }
 
     var errorView: XCUIElement {
-        app.otherElements["discovery-error"]
+        app.otherElements[DiscoveryIDs.error]
     }
 
     // MARK: - Actions
@@ -38,7 +47,7 @@ struct DiscoveryScreen {
     func waitForCardToLoad(timeout: TimeInterval = 30) -> Bool {
         // Wait for either card to load or error to appear
         // Use descendants query to find element with coffee-card identifier
-        let cardQuery = app.descendants(matching: .any).matching(identifier: "coffee-card").firstMatch
+        let cardQuery = app.descendants(matching: .any).matching(identifier: DiscoveryIDs.coffeeCard).firstMatch
         let cardExists = cardQuery.waitForExistence(timeout: timeout)
         if !cardExists && hasError {
             print("⚠️ Coffee card failed to load - error view is showing")

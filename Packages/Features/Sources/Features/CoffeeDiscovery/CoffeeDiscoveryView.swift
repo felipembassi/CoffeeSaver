@@ -53,7 +53,7 @@ public struct CoffeeDiscoveryView: View {
         case .idle, .loading:
             LoadingView(message: Strings.Discovery.loading)
                 .frame(maxWidth: .infinity, maxHeight: 500)
-                .accessibilityIdentifier("discovery-loading")
+                .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.loading)
 
         case .loaded(let image):
             SwipeableCardView()
@@ -69,7 +69,7 @@ public struct CoffeeDiscoveryView: View {
                         await viewModel.skipCoffee()
                     }
                 }
-                .accessibilityIdentifier("coffee-card")
+                .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.coffeeCard)
                 .accessibilityLabel("coffee-image-\(viewModel.currentCoffeeURL ?? "unknown")")
 
         case .error(let message):
@@ -82,7 +82,7 @@ public struct CoffeeDiscoveryView: View {
                 }
             )
             .frame(maxWidth: .infinity, maxHeight: 500)
-            .accessibilityIdentifier("discovery-error")
+            .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.error)
         }
     }
 
@@ -100,7 +100,7 @@ public struct CoffeeDiscoveryView: View {
                     .background(Circle().fill(Colors.dislikeOverlay(opacity: 0.1)))
             }
             .disabled(viewModel.isLoading || viewModel.isSaving)
-            .accessibilityIdentifier("skip-button")
+            .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.skipButton)
 
             Button(action: {
                 Task {
@@ -114,7 +114,7 @@ public struct CoffeeDiscoveryView: View {
                     .background(Circle().fill(Colors.likeOverlay(opacity: 0.1)))
             }
             .disabled(viewModel.isLoading || viewModel.isSaving)
-            .accessibilityIdentifier("like-button")
+            .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.likeButton)
         }
     }
 }

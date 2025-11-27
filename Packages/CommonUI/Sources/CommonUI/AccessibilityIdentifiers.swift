@@ -8,48 +8,36 @@ import Foundation
 /// ```swift
 /// // In view
 /// Button("Save") { ... }
-///     .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.saveButton)
+///     .accessibilityIdentifier(AccessibilityIdentifiers.Discovery.likeButton)
 ///
 /// // In test
-/// let saveButton = app.buttons[AccessibilityIdentifiers.Discovery.saveButton]
-/// saveButton.tap()
+/// let likeButton = app.buttons[AccessibilityIdentifiers.Discovery.likeButton]
+/// likeButton.tap()
 /// ```
 public enum AccessibilityIdentifiers {
 
     // MARK: - Coffee Discovery
 
     public enum Discovery {
-        public static let coffeeImage = "discovery.coffeeImage"
-        public static let saveButton = "discovery.saveButton"
-        public static let skipButton = "discovery.skipButton"
-        public static let loadingIndicator = "discovery.loadingIndicator"
-        public static let errorView = "discovery.errorView"
-        public static let retryButton = "discovery.retryButton"
+        public static let coffeeCard = "coffee-card"
+        public static let likeButton = "like-button"
+        public static let skipButton = "skip-button"
+        public static let loading = "discovery-loading"
+        public static let error = "discovery-error"
     }
 
     // MARK: - Saved Coffees
 
-    public enum SavedCoffees {
-        public static let coffeeList = "saved.coffeeList"
-        public static let coffeeCell = "saved.coffeeCell"
-        public static let emptyState = "saved.emptyState"
-        public static let deleteButton = "saved.deleteButton"
-        public static let thumbnailImage = "saved.thumbnailImage"
-    }
+    public enum Saved {
+        public static let grid = "saved-grid"
+        public static let emptyState = "saved-empty-state"
 
-    // MARK: - Navigation
+        /// Returns the delete button identifier for a specific coffee ID
+        public static func deleteButton(for coffeeID: UUID) -> String {
+            "delete-button-\(coffeeID)"
+        }
 
-    public enum Navigation {
-        public static let tabBar = "navigation.tabBar"
-        public static let discoveryTab = "navigation.discoveryTab"
-        public static let savedTab = "navigation.savedTab"
-    }
-
-    // MARK: - Common
-
-    public enum Common {
-        public static let loadingView = "common.loadingView"
-        public static let errorView = "common.errorView"
-        public static let retryButton = "common.retryButton"
+        /// Prefix used for delete buttons
+        public static let deleteButtonPrefix = "delete-button-"
     }
 }

@@ -1,16 +1,23 @@
 import XCTest
 
+/// Accessibility identifiers matching AccessibilityIdentifiers.Saved in CommonUI
+private enum SavedIDs {
+    static let emptyState = "saved-empty-state"
+    static let grid = "saved-grid"
+    static let deleteButtonPrefix = "delete-button-"
+}
+
 struct SavedScreen {
     let app: XCUIApplication
 
     // MARK: - Elements
 
     var emptyState: XCUIElement {
-        app.otherElements["saved-empty-state"]
+        app.otherElements[SavedIDs.emptyState]
     }
 
     var grid: XCUIElement {
-        app.scrollViews["saved-grid"]
+        app.scrollViews[SavedIDs.grid]
     }
 
     func thumbnail(at index: Int) -> XCUIElement {
@@ -18,7 +25,7 @@ struct SavedScreen {
     }
 
     func deleteButton(for coffeeID: String) -> XCUIElement {
-        app.buttons["delete-button-\(coffeeID)"]
+        app.buttons["\(SavedIDs.deleteButtonPrefix)\(coffeeID)"]
     }
 
     var deleteAlert: XCUIElement {
@@ -73,7 +80,7 @@ struct SavedScreen {
             var foundButton: XCUIElement?
 
             for button in allButtons {
-                if button.identifier.hasPrefix("delete-button-") {
+                if button.identifier.hasPrefix(SavedIDs.deleteButtonPrefix) {
                     foundButton = button
                     break
                 }
