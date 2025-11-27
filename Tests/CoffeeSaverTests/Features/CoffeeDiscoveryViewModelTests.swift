@@ -16,12 +16,12 @@ struct CoffeeDiscoveryViewModelTests {
         // Given - use real CoffeeAPIClient with mock network
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -42,15 +42,14 @@ struct CoffeeDiscoveryViewModelTests {
     @Test("Load coffee handles API error")
     func loadCoffeeHandlesAPIError() async throws {
         // Given
-        var mockNetwork = MockNetworkService()
-        mockNetwork.errorToThrow = .networkError("Test error")
+        let mockNetwork = MockNetworkService(errorToThrow: .networkError("Test error"))
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -69,12 +68,12 @@ struct CoffeeDiscoveryViewModelTests {
     func loadCoffeeHandlesDownloadError() async throws {
         // Given - use test-local mock for download error scenario
         let mockAPI = TestMockCoffeeAPIClient(shouldFailDownload: true)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: mockAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -96,12 +95,12 @@ struct CoffeeDiscoveryViewModelTests {
         // Given
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -123,12 +122,12 @@ struct CoffeeDiscoveryViewModelTests {
         // Given
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -146,12 +145,12 @@ struct CoffeeDiscoveryViewModelTests {
         // Given - use test-local mock for storage error
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let mockStorage = TestMockImageStorageService(shouldFailSave: true)
+        let dependencies = TestDependencies(storageService: TestMockImageStorageService(shouldFailSave: true))
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: mockStorage,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -176,12 +175,12 @@ struct CoffeeDiscoveryViewModelTests {
         // Given
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -202,13 +201,13 @@ struct CoffeeDiscoveryViewModelTests {
         // Given
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         // When
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -225,12 +224,12 @@ struct CoffeeDiscoveryViewModelTests {
         // Given
         let mockNetwork = MockNetworkService()
         let coffeeAPI = CoffeeAPIClient(networkService: mockNetwork)
-        let storageService = ImageStorageService.forTesting()
+        let dependencies = TestDependencies(storageService: ImageStorageService.forTesting())
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = CoffeeDiscoveryViewModel(
             coffeeAPIClient: coffeeAPI,
-            storageService: storageService,
+            dependencies: dependencies,
             modelContext: modelContext
         )
 
@@ -312,4 +311,9 @@ private struct TestMockImageStorageService: ImageStorageServiceProtocol {
     func generateThumbnail(from data: Data, withID id: UUID) async throws -> String {
         "/test/\(id)_thumb.jpg"
     }
+}
+
+/// Mock dependencies for ViewModel tests
+private struct TestDependencies: CoffeeDiscoveryViewModel.Dependencies {
+    let storageService: ImageStorageServiceProtocol
 }

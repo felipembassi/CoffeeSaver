@@ -40,6 +40,25 @@ public protocol HasStorageService {
     var storageService: ImageStorageServiceProtocol { get }
 }
 
+/// Protocol for types that provide access to the Network Reachability service.
+///
+/// Use this protocol to declare dependencies on the reachability service without
+/// coupling to the full container implementation.
+///
+/// Example:
+/// ```swift
+/// class MyViewModel {
+///     typealias Dependencies = HasReachability
+///
+///     init(dependencies: Dependencies) {
+///         self.reachability = dependencies.reachability
+///     }
+/// }
+/// ```
+public protocol HasReachability {
+    var reachability: NetworkReachabilityProtocol { get }
+}
+
 // MARK: - Convenience Typealiases
 
 /// Convenience typealias for components that need all app dependencies.
@@ -54,4 +73,4 @@ public protocol HasStorageService {
 ///     }
 /// }
 /// ```
-public typealias AppDependencies = HasNetworkService & HasStorageService & Sendable
+public typealias AppDependencies = HasNetworkService & HasStorageService & HasReachability & Sendable

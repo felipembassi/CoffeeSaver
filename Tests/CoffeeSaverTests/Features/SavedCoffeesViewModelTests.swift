@@ -18,7 +18,7 @@ struct SavedCoffeesViewModelTests {
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = SavedCoffeesViewModel(
-            storageService: mockStorage,
+            dependencies: TestDependencies(storageService: mockStorage),
             modelContext: modelContext
         )
 
@@ -39,7 +39,7 @@ struct SavedCoffeesViewModelTests {
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = SavedCoffeesViewModel(
-            storageService: mockStorage,
+            dependencies: TestDependencies(storageService: mockStorage),
             modelContext: modelContext
         )
 
@@ -58,7 +58,7 @@ struct SavedCoffeesViewModelTests {
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = SavedCoffeesViewModel(
-            storageService: mockStorage,
+            dependencies: TestDependencies(storageService: mockStorage),
             modelContext: modelContext
         )
 
@@ -97,7 +97,7 @@ struct SavedCoffeesViewModelTests {
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = SavedCoffeesViewModel(
-            storageService: mockStorage,
+            dependencies: TestDependencies(storageService: mockStorage),
             modelContext: modelContext
         )
 
@@ -124,15 +124,15 @@ struct SavedCoffeesViewModelTests {
         #expect(coffees.count == 0)
     }
 
-    @Test("Delete coffee handles storage error")
-    func deleteCoffeeHandlesStorageError() async throws {
+    @Test("Delete coffee succeeds even with storage cleanup error")
+    func deleteCoffeeSucceedsWithStorageError() async throws {
         // Given
         let mockStorage = MockImageStorageService()
         await mockStorage.setShouldFailDelete(true)
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = SavedCoffeesViewModel(
-            storageService: mockStorage,
+            dependencies: TestDependencies(storageService: mockStorage),
             modelContext: modelContext
         )
 
@@ -146,15 +146,14 @@ struct SavedCoffeesViewModelTests {
         modelContext.insert(coffee)
         try modelContext.save()
 
-        // When/Then
-        await #expect(throws: StorageError.self) {
-            try await viewModel.deleteCoffee(coffee)
-        }
+        // When - delete should succeed (SwiftData deletion is the source of truth)
+        try await viewModel.deleteCoffee(coffee)
 
-        // Verify still exists in SwiftData (rollback)
+        // Then - coffee should be removed from SwiftData even if file cleanup failed
+        // File cleanup errors are non-fatal to ensure data consistency
         let descriptor = FetchDescriptor<CoffeeImage>()
         let coffees = try modelContext.fetch(descriptor)
-        #expect(coffees.count == 1)
+        #expect(coffees.count == 0)
     }
 
     @Test("Delete multiple coffees")
@@ -164,7 +163,7 @@ struct SavedCoffeesViewModelTests {
         let modelContext = try createInMemoryModelContext()
 
         let viewModel = SavedCoffeesViewModel(
-            storageService: mockStorage,
+            dependencies: TestDependencies(storageService: mockStorage),
             modelContext: modelContext
         )
 
@@ -202,4 +201,11 @@ struct SavedCoffeesViewModelTests {
         let container = try ModelContainer(for: schema, configurations: [configuration])
         return ModelContext(container)
     }
+}
+
+// MARK: - Test Dependencies
+
+/// Mock dependencies for ViewModel tests
+private struct TestDependencies: SavedCoffeesViewModel.Dependencies {
+    let storageService: ImageStorageServiceProtocol
 }

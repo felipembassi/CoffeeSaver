@@ -8,27 +8,35 @@ import UIKit
 ///
 /// Example:
 /// ```swift
-/// var mock = MockNetworkService()
-/// mock.nextResponseJSON = #"{"file": "https://example.com/coffee.jpg"}"#
+/// let mock = MockNetworkService(
+///     nextResponseJSON: #"{"file": "https://example.com/coffee.jpg"}"#
+/// )
 ///
 /// let client = CoffeeAPIClient(networkService: mock)
 /// let response = try await client.fetchRandomCoffee()
 /// ```
+///
+/// Note: This is a struct with immutable configuration for thread safety.
+/// Create a new instance with different values if you need different behavior.
 public struct MockNetworkService: NetworkServiceProtocol, Sendable {
     /// JSON string to return for `request<T>` calls. Will be decoded to T.
-    public var nextResponseJSON: String?
+    public let nextResponseJSON: String?
 
     /// Raw data to return for `requestData` and `downloadData` calls.
     /// If nil, generates default image data lazily.
-    public var nextData: Data?
+    public let nextData: Data?
 
     /// If set, all requests will throw this error.
-    public var errorToThrow: NetworkError?
+    public let errorToThrow: NetworkError?
 
-    public init() {
-        self.nextResponseJSON = nil
-        self.nextData = nil  // Will generate lazily
-        self.errorToThrow = nil
+    public init(
+        nextResponseJSON: String? = nil,
+        nextData: Data? = nil,
+        errorToThrow: NetworkError? = nil
+    ) {
+        self.nextResponseJSON = nextResponseJSON
+        self.nextData = nextData
+        self.errorToThrow = errorToThrow
     }
 
     /// Creates default image data for mock responses.

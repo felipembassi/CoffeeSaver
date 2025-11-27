@@ -2,20 +2,20 @@ import Foundation
 import SwiftUI
 import SwiftData
 import Core
-
-// MARK: - Constants
-
-private enum Constants {
-    static let maxImageDimension: CGFloat = 1200
-    static let jpegCompressionQuality: CGFloat = 0.9
-}
+import CommonUI
 
 @MainActor
 @Observable
 public final class CoffeeDiscoveryViewModel {
+    /// Dependencies required by this ViewModel.
+    public typealias Dependencies = HasStorageService
+
     private let coffeeAPIClient: CoffeeAPIClientProtocol
     private let storageService: ImageStorageServiceProtocol
     private let modelContext: ModelContext
+
+    /// Current loading task - stored for cancellation support
+    private var currentLoadTask: Task<Void, Never>?
 
     public enum LoadingState: Equatable {
         case idle
@@ -43,15 +43,27 @@ public final class CoffeeDiscoveryViewModel {
 
     public init(
         coffeeAPIClient: CoffeeAPIClientProtocol,
-        storageService: ImageStorageServiceProtocol,
+        dependencies: Dependencies,
         modelContext: ModelContext
     ) {
         self.coffeeAPIClient = coffeeAPIClient
-        self.storageService = storageService
+        self.storageService = dependencies.storageService
         self.modelContext = modelContext
     }
 
     public func loadRandomCoffee() async {
+        // Cancel any existing load task
+        currentLoadTask?.cancel()
+
+        let task = Task {
+            await performLoad()
+        }
+        // Assign before awaiting to ensure cancellation works if called again
+        currentLoadTask = task
+        _ = await task.result
+    }
+
+    private func performLoad() async {
         loadingState = .loading
 
         do {
@@ -72,7 +84,7 @@ public final class CoffeeDiscoveryViewModel {
             try Task.checkCancellation()
 
             // Downsample large images to avoid memory issues
-            let targetSize = CGSize(width: Constants.maxImageDimension, height: Constants.maxImageDimension)
+            let targetSize = CGSize(width: Dimensions.maxImageDimension, height: Dimensions.maxImageDimension)
             guard let image = downsampleImage(data: imageData, to: targetSize) else {
                 throw NetworkError.imageConversionFailed
             }
@@ -110,7 +122,7 @@ public final class CoffeeDiscoveryViewModel {
     public func saveCoffee() async {
         guard case .loaded(let image) = loadingState,
               let coffeeURL = currentCoffeeURL,
-              let imageData = image.jpegData(compressionQuality: Constants.jpegCompressionQuality) else {
+              let imageData = image.jpegData(compressionQuality: Dimensions.imageQuality) else {
             return
         }
 
@@ -176,5 +188,13 @@ public final class CoffeeDiscoveryViewModel {
             return true
         }
         return false
+    }
+
+    /// Cancels any pending tasks.
+    ///
+    /// Call this when the view disappears or the ViewModel is being deallocated.
+    public func cancelPendingTasks() {
+        currentLoadTask?.cancel()
+        currentLoadTask = nil
     }
 }

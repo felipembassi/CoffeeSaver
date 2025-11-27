@@ -39,16 +39,19 @@ struct DependencyInjectionTests {
         // Given custom service instances
         let networkService = MockNetworkService()
         let storageService = ImageStorageService.forTesting()
+        let reachability = MockNetworkReachability()
 
         // When creating a container with custom services
         let container = ServiceContainer(
             networkService: networkService,
-            storageService: storageService
+            storageService: storageService,
+            reachability: reachability
         )
 
         // Then it should use the provided services
         #expect(container.networkService is MockNetworkService)
         #expect(container.storageService is ImageStorageService)
+        #expect(container.reachability is MockNetworkReachability)
     }
 
     // MARK: - Has<Property> Protocol Conformance
@@ -77,6 +80,18 @@ struct DependencyInjectionTests {
         #expect(hasStorage.storageService is ImageStorageService)
     }
 
+    @Test("ServiceContainer conforms to HasReachability")
+    func serviceContainerConformsToHasReachability() {
+        // Given a service container
+        let container = ServiceContainer.testing()
+
+        // When treating it as HasReachability
+        let hasReachability: any HasReachability = container
+
+        // Then it should provide reachability service access
+        #expect(hasReachability.reachability is MockNetworkReachability)
+    }
+
     @Test("ServiceContainer conforms to AppDependencies composition")
     func serviceContainerConformsToAppDependencies() {
         // Given a service container
@@ -88,6 +103,7 @@ struct DependencyInjectionTests {
         // Then it should provide access to all services
         #expect(dependencies.networkService is MockNetworkService)
         #expect(dependencies.storageService is ImageStorageService)
+        #expect(dependencies.reachability is MockNetworkReachability)
     }
 
     // MARK: - Sendable Conformance
@@ -158,6 +174,7 @@ struct DependencyInjectionTests {
         struct MockDependencies: AppDependencies {
             let networkService: NetworkServiceProtocol = MockNetworkService()
             let storageService: ImageStorageServiceProtocol = ImageStorageService.forTesting()
+            let reachability: NetworkReachabilityProtocol = MockNetworkReachability()
         }
 
         // When creating mock dependencies
@@ -167,6 +184,7 @@ struct DependencyInjectionTests {
         let dependencies: any AppDependencies = mocks
         #expect(dependencies.networkService is MockNetworkService)
         #expect(dependencies.storageService is ImageStorageService)
+        #expect(dependencies.reachability is MockNetworkReachability)
     }
 
     // MARK: - Environment Configuration Tests

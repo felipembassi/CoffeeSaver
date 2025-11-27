@@ -1,5 +1,8 @@
 import Foundation
 import UIKit
+import os.log
+
+private let logger = Logger(subsystem: "com.coffeesaver", category: "ImageStorage")
 
 // MARK: - Constants
 
@@ -72,7 +75,6 @@ public struct ImageStorageService: ImageStorageServiceProtocol, Sendable {
     }
 
     /// Creates a storage service with a custom base directory.
-    /// Useful for testing with a temporary directory.
     ///
     /// - Parameters:
     ///   - baseDirectory: The base directory for storing images.
@@ -84,17 +86,18 @@ public struct ImageStorageService: ImageStorageServiceProtocol, Sendable {
         Self.createDirectoriesIfNeeded(imagesDirectory: imagesDirectory, thumbnailsDirectory: thumbnailsDirectory, fileManager: fileManager)
     }
 
-    /// Creates a storage service for testing using a temporary directory.
-    /// The directory is automatically cleaned up by the system.
-    public static func forTesting() -> ImageStorageService {
-        let tempDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("CoffeeSaverTests-\(UUID().uuidString)", isDirectory: true)
-        return ImageStorageService(baseDirectory: tempDirectory)
-    }
-
     private static func createDirectoriesIfNeeded(imagesDirectory: URL, thumbnailsDirectory: URL, fileManager: FileManager) {
-        try? fileManager.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
-        try? fileManager.createDirectory(at: thumbnailsDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
+        } catch {
+            logger.error("Failed to create images directory at \(imagesDirectory.path): \(error.localizedDescription)")
+        }
+
+        do {
+            try fileManager.createDirectory(at: thumbnailsDirectory, withIntermediateDirectories: true)
+        } catch {
+            logger.error("Failed to create thumbnails directory at \(thumbnailsDirectory.path): \(error.localizedDescription)")
+        }
     }
 
     public func saveImage(_ data: Data, withID id: UUID) async throws -> String {

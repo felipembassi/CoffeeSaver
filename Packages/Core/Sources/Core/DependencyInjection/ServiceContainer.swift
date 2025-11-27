@@ -23,6 +23,7 @@ import Foundation
 public struct ServiceContainer: AppDependencies, Sendable {
     public let networkService: NetworkServiceProtocol
     public let storageService: ImageStorageServiceProtocol
+    public let reachability: NetworkReachabilityProtocol
 
     // MARK: - Initialization
 
@@ -47,12 +48,23 @@ public struct ServiceContainer: AppDependencies, Sendable {
     }
 
     /// Create a production container with real services.
+    ///
+    /// Note: Network reachability monitoring starts automatically when you first
+    /// access the `connectivityStream` or `isConnected` properties.
     public static func production() -> ServiceContainer {
         let config = CoffeeAPIConfiguration.configuration(for: .production)
 
+        let reachability = NetworkReachability()
+
+        // Start monitoring immediately in a detached task.
+        // The task is intentionally not stored as the reachability actor
+        // manages its own lifecycle and will stop monitoring on deinit.
+        Task.detached { await reachability.startMonitoring() }
+
         return ServiceContainer(
             networkService: NetworkService(baseURL: config.baseURL),
-            storageService: ImageStorageService()
+            storageService: ImageStorageService(),
+            reachability: reachability
         )
     }
 
@@ -61,9 +73,13 @@ public struct ServiceContainer: AppDependencies, Sendable {
     /// This uses the real `ImageStorageService` with a temporary directory,
     /// ensuring tests exercise the real code paths including priority handling.
     public static func testing() -> ServiceContainer {
-        ServiceContainer(
+        let tempDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CoffeeSaverTests-\(UUID().uuidString)", isDirectory: true)
+
+        return ServiceContainer(
             networkService: MockNetworkService(),
-            storageService: ImageStorageService.forTesting()
+            storageService: ImageStorageService(baseDirectory: tempDirectory),
+            reachability: MockNetworkReachability()
         )
     }
 
@@ -72,12 +88,15 @@ public struct ServiceContainer: AppDependencies, Sendable {
     /// - Parameters:
     ///   - networkService: The network service to use for API calls.
     ///   - storageService: The storage service for image persistence.
+    ///   - reachability: The reachability service for network connectivity monitoring.
     public init(
         networkService: NetworkServiceProtocol,
-        storageService: ImageStorageServiceProtocol
+        storageService: ImageStorageServiceProtocol,
+        reachability: NetworkReachabilityProtocol
     ) {
         self.networkService = networkService
         self.storageService = storageService
+        self.reachability = reachability
     }
 }
 

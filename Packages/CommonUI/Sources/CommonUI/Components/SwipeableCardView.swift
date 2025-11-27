@@ -20,9 +20,10 @@ public struct SwipeableCardView: View {
     @State private var offset: CGSize = .zero
     @State private var rotation: Double = 0
     @State private var isAnimating = false
+    @State private var pendingAction: SwipeDirection?
+    @State private var swipeCompleted = false
 
     private let swipeThreshold: CGFloat = Spacing.swipeThreshold
-    private let hapticEngine = UIImpactFeedbackGenerator(style: .medium)
 
     public init(
         image: UIImage? = nil,
@@ -53,9 +54,35 @@ public struct SwipeableCardView: View {
             .rotationEffect(.degrees(rotation))
             .gesture(dragGesture)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: offset)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: rotation)
+            .onChange(of: offset) { _, newValue in
+                handleAnimationCompletion(newValue)
+            }
+            .sensoryFeedback(.impact(weight: .medium), trigger: swipeCompleted) { _, newValue in
+                enableHaptics && newValue
+            }
         }
         .aspectRatio(5/7, contentMode: .fit)
+    }
+
+    private func handleAnimationCompletion(_ newOffset: CGSize) {
+        // Check if animation completed (card moved off-screen)
+        guard let direction = pendingAction,
+              abs(newOffset.width) >= Dimensions.swipeOffscreenDistance else {
+            return
+        }
+
+        // Execute the action
+        if direction == .right {
+            onSave()
+        } else {
+            onSkip()
+        }
+
+        // Reset state
+        pendingAction = nil
+        offset = .zero
+        rotation = 0
+        isAnimating = false
     }
 
     private func cardContent(size: CGSize) -> some View {
@@ -142,27 +169,16 @@ public struct SwipeableCardView: View {
     private func completeSwipe(_ direction: SwipeDirection) {
         let targetX: CGFloat = direction == .right ? Dimensions.swipeOffscreenDistance : -Dimensions.swipeOffscreenDistance
 
+        // Store the pending action to be executed when animation completes
+        pendingAction = direction
+
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
             offset = CGSize(width: targetX, height: 0)
             rotation = direction == .right ? Dimensions.maxRotation : -Dimensions.maxRotation
         }
 
-        if enableHaptics {
-            hapticEngine.impactOccurred()
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if direction == .right {
-                onSave()
-            } else {
-                onSkip()
-            }
-
-            // Reset state
-            offset = .zero
-            rotation = 0
-            isAnimating = false
-        }
+        // Trigger haptic feedback via SwiftUI's sensoryFeedback modifier
+        swipeCompleted.toggle()
     }
 }
 

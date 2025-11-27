@@ -141,14 +141,10 @@ struct CoffeeThumbnailView: View {
 
         do {
             let image = try await viewModel.loadImage(from: imagePath)
-            await MainActor.run {
-                loadedImage = image
-                isLoading = false
-            }
+            loadedImage = image
+            isLoading = false
         } catch {
-            await MainActor.run {
-                isLoading = false
-            }
+            isLoading = false
         }
     }
 }
